@@ -27,19 +27,9 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Regex
 import logging
 import settings
 
-# Высылаем котиков
-from glob import glob
-from random import choice
+from handlers import *
 
-# Работаем с эмоциями
-from emoji import emojize
-
-# Reply keyboard, Получение геолокации и контактных данных пользователя
-from telegram import ReplyKeyboardMarkup, KeyboardButton
-
-USER_EMOJI = [':smiley_cat: ', ':smiling_imp:', ':panda_face:', ':dog:']
-
-logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO, filename='bot.log')
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, filename='bot.log')
  
 #Тело бота
 def main():
@@ -48,13 +38,14 @@ def main():
     # to said dispatcher. It also runs in a separate thread, so the user can interact with the bot, for example on the command line. 
     mybot = Updater(settings.API, request_kwargs = settings.PROXY)    
     
+    logging.info('Bot start')
+    
     # This class dispatches all kinds of updates to its registered handlers.
     dp = mybot.dispatcher
     # Register a handler.
     # регистрируем процедуру greet_user как обработчик команды start
     # Важно! Ставьте CommandHandler выше MessageHandler, тк он перехватит команды
     dp.add_handler(CommandHandler("start", greet_user, pass_user_data=True))
-    dp.add_handler(CommandHandler("whoisyourdaddy", daddy_info, pass_user_data=True)) 
     dp.add_handler(CommandHandler("cat", send_cat_picture, pass_user_data=True))
     dp.add_handler(RegexHandler('^(Send me a cat)$', send_cat_picture, pass_user_data=True))
     dp.add_handler(RegexHandler('^(Change ava)$', change_avatar, pass_user_data=True))
@@ -69,69 +60,12 @@ def main():
     # Blocks until one of the signals are received and stops the updater.
     mybot.idle()
     
-# user_data - это словарь    
-def greet_user(bot, update, user_data):
-    emo = get_user_emo(user_data)
-    user_data['emo'] = emo
-    text = "Hello {}".format(emo)
- #   bot.sendMessage(chat_id = update.message.chat_id, text = 'Hello, I am a @learn python bot!')
-
-    update.message.reply_text(text, reply_markup=get_keybard())
-
-    
-
-def talk_to_me(bot, update, user_data):
-    emo = get_user_emo(user_data)
-    user_text = "Hello {} {}! You wrote: {}".format(update.message.chat.first_name, emo, update.message.text, reply_markup=get_keybard())
-    print(user_text)
-    update.message.reply_text(user_text, reply_markup=get_keybard())
-
-
-def daddy_info(bot, update, user_data):
-    text = "User click /whoisyourdaddy"
-    print(text)
-    reply_text = "My father in Gena. He lives in another region with his new family. We talk to him rare."
-    update.message.reply_text(reply_text, reply_markup=get_keybard())
-
-def send_cat_picture(bot, update, user_data):
-    cat_list = glob('images/cat*.jp*g')
-    cat_pic = choice(cat_list)
-    # 'rb' = read binary
-    bot.send_photo(chat_id=update.message.chat_id, photo=open(cat_pic, 'rb'), reply_markup=get_keybard())
-
-def get_user_emo(user_data):
-    if 'emo' in user_data:
-        return user_data['emo']
-    else:
-        user_data['emo'] = emojize(choice(USER_EMOJI), use_aliases=True)
-        return user_data['emo']
-        
-def change_avatar(bot, update, user_data):
-    if 'emo' in user_data:
-        del user_data['emo']
-    emo = get_user_emo(user_data)
-    update.message.reply_text('Done: {}'.format(emo), reply_markup=get_keybard())
-
-def get_contact(bot, update, user_data):
-    print(update.message.contact)
-    update.message.reply_text('Done: {}'.format(get_user_emo(user_data)), reply_markup=get_keybard())
-
-def get_location(bot, update, user_data):
-    print(update.message.location)
-    update.message.reply_text('Done: {}'.format(get_user_emo(user_data)), reply_markup=get_keybard())   
-
-def get_keybard():
-    contact_button = KeyboardButton('Send me user contact', request_contact=True)
-    location_button = KeyboardButton('Send me geolocation', request_location=True)
- 
-    my_keyboard = ReplyKeyboardMarkup([
-                                        ['Send me a cat', 'Change ava'],
-                                        [contact_button, location_button]
-                                      ], resize_keyboard=True
-                                      )
   
-
-main()
+# Два подчеркивания (__) - системная переменная Питона
+# Эта конструкция позволяет импортировать функции как методы в других файлах
+# Если файл вызвали напрямую, выполняй функцию main()
+if __name__ == "__main__":
+    main()
 
 
 
